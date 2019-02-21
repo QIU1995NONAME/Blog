@@ -1,5 +1,7 @@
 # QIU1995NONAME 的 博客
 
+<https://qiu1995noname.github.io/QBlogs/>
+
 [![Creative Commons License][img0]][lnk0]
 
 This work is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License][lnk0]
