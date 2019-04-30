@@ -1,6 +1,6 @@
 ---
 layout: docs
-title:  "Linux 为Android编译Glib"
+title:  "Linux 为 Android 编译 Glib"
 date:   2017-11-09
 categories: Linux Android Glib
 enable_mathjax: false

@@ -113,7 +113,7 @@ $ sudo USE="-native-extensions -python_targets_python2_7" \
        CFLAGS="-I/usr/arm-unknown-linux-gnueabi/usr/include/python3.6" \
        LDFLAGS="-L/usr/arm-unknown-linux-gnueabi/usr/lib" \
        arm-unknown-linux-gnueabi-emerge -auN1 --keep-going \
-       "=portage-2.3.51-r1" gentoolkit
+       portage gentoolkit
 $ sudo USE="minimal -python_targets_python2_7" \
        CFLAGS="-I/usr/arm-unknown-linux-gnueabi/usr/include/python3.6" \
        LDFLAGS="-L/usr/arm-unknown-linux-gnueabi/usr/lib" \
@@ -127,20 +127,22 @@ $ sudo USE="minimal -python_targets_python2_7" \
   ##  修改部分 make.conf 中的配置
   ##  删除 HOSTCC
   ##  删除 ROOT
+  ##  删除 CBUILD
   ##  删除 PKG_CONFIG_PATH
   ##  删除 PORTAGE_TMPDIR
+  ##  FEATURES 添加 '-pid-sandbox'
   ##  替换 ${ARCH} 为 arm
 $ cd /usr/arm-unknown-linux-gnueabi
-$ sudo mount --bind /proc proc
-$ sudo mount --bind /dev  dev
-$ sudo mount --bind /sys  sys
-$ sudo mount --bind /usr/portage usr/portage
-$ sudo mount --bind /var/tmp/arm-unknown-linux-gnueabi var/tmp
+$ sudo mount --rbind /proc proc
+$ sudo mount --rbind /dev  dev
+$ sudo mount --rbind /sys  sys
+$ sudo mount --rbind /usr/portage usr/portage
+$ sudo mount --rbind /var/tmp/arm-unknown-linux-gnueabi var/tmp
 $ sudo cp /etc/locale.gen /etc/resolv.conf etc/
 $ sudo chroot .
 (chroot) ldconfig
 (chroot) locale-gen
-(chroot) emerge -auN1 "=portage-2.3.51-r1"
-(chroot) emerge -auDN --keep-going @world --exclude="portage"
+(chroot) emerge -auN1 portage
+(chroot) emerge -auDN --keep-going @world
 
 ```
