@@ -171,8 +171,7 @@ sdc           8:32   0   18G  0 disk
 
 ### 配置 /etc/fstab
 ``` bash
-(Fedora Live) $ sudo su
-(Fedora Live ROOT) cat > /mnt/gentoo/etc/fstab << EOF
+(Fedora Live) cat << EOF | sudo tee /mnt/gentoo/etc/fstab
 /dev/sda1   /boot/efi       vfat      nouser,nosuid,noexec,sync,umask=0077  0 2
 /dev/sda2   /boot           xfs       defaults,noatime,nodiratime           0 0
 /dev/sda3   /               xfs       defaults,noatime,nodiratime           0 0
@@ -221,7 +220,7 @@ EOF
 ### 配置 /etc/portage/make.conf
 ``` bash
 (chroot gentoo) cat > /etc/portage/make.conf << EOF
-GENTOO_MIRRORS="http://mirrors.163.com/gentoo/"
+GENTOO_MIRRORS="https://mirrors.163.com/gentoo/"
 PORTDIR="/usr/portage"
 PKGDIR="/usr/portage/packages"
 DISTDIR="/usr/portage/distfiles"
@@ -230,8 +229,8 @@ CFLAGS="-O2 -pipe"
 LC_MESSAGES=C
 
 CPU_FLAGS_X86="sse4_1 sse4_2 sse3 ssse3 sse2 sse mmx mmxext"
-PYTHON_TARGETS="python3_6 python3_5 python3_4 python2_7"
-USE="bzip2 ipv6 lzma threads urandom"
+PYTHON_TARGETS="python3_6 python2_7"
+USE="bzip2 lzma threads urandom -fortran"
 
 EOF
 ```
@@ -275,7 +274,7 @@ sys-boot/grub
 sys-devel/gcc
 sys-fs/xfsprogs
 sys-kernel/dracut
-sys-kernel/gentoo-sources:4.14.65
+sys-kernel/gentoo-sources
 
 EOF
 ```
@@ -287,13 +286,14 @@ EOF
 
 (chroot gentoo) cat > 00_sys-boot_grub << EOF
 sys-boot/grub grub_platforms_efi-64 grub_platforms_pc device-mapper
+sys-boot/grub fonts mount themes truetype
 EOF
 
 (chroot gentoo) cat > 01_sys-apps_systemd << EOF
 sys-apps/systemd elfutils sysv-utils
 EOF
 
-(chroot gentoo) cat > 20_net-misc_networkmanager << EOF
+(chroot gentoo) cat > net-misc_networkmanager << EOF
 net-misc/networkmanager dhclient -dhcpcd -modemmanager -ppp -wext -wifi
 EOF
 
@@ -306,7 +306,7 @@ EOF
 ### 准备重构整个系统
 ``` bash
 (chroot gentoo) emerge -aef @world
-(chroot gentoo) emerge -a sys-kernel/gentoo-sources:4.14.65
+(chroot gentoo) emerge -au1 sys-kernel/gentoo-sources
 ```
 
 ### 配置内核

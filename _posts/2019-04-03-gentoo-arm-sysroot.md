@@ -48,9 +48,11 @@ __EOF__
 ### 初始化交叉环境
 ``` bash
 $ sudo crossdev --stable --init-target -t arm-unknown-linux-gnueabi
-$ sudo mkdir -p  /var/tmp/arm-unknown-linux-gnueabi
-$ sudo chmod 777 /var/tmp/arm-unknown-linux-gnueabi
-$ sudo chmod +t  /var/tmp/arm-unknown-linux-gnueabi
+$ sudo crossdev --stable --init-target -t aarch64-unknown-linux-gnu
+$ sudo mkdir -p  /var/tmp/{aarch64-unknown-linux-gnu,arm-unknown-linux-gnueabi}
+$ sudo chmod 777 /var/tmp/{aarch64-unknown-linux-gnu,arm-unknown-linux-gnueabi}
+$ sudo chmod +t  /var/tmp/{aarch64-unknown-linux-gnu,arm-unknown-linux-gnueabi}
+$ sudo vim /usr/aarch64-unknown-linux-gnu/etc/portage/make.conf
 $ sudo vim /usr/arm-unknown-linux-gnueabi/etc/portage/make.conf
   ###### 主要修改以下内容
   ##     ACCEPT_KEYWORDS="${ARCH}"    # 删除 '～${ARCH}'
@@ -59,24 +61,34 @@ $ sudo vim /usr/arm-unknown-linux-gnueabi/etc/portage/make.conf
   ##     DISTDIR="/usr/portage/distfiles/"
   ##     PKGDIR="/usr/portage/packages/${CHOST}/"
   ##     PORTAGE_TMPDIR="/var/tmp/${CHOST}/"
+$ sudo rm /usr/aarch64-unknown-linux-gnu/etc/portage/make.profile
 $ sudo rm /usr/arm-unknown-linux-gnueabi/etc/portage/make.profile
-$ sudo ln -svf /usr/portage/profiles/default/linux/arm/17.0/armv7a \
+$ sudo ln -svf /usr/portage/profiles/default/linux/arm64/17.0/systemd \
+      /usr/aarch64-unknown-linux-gnu/etc/portage/make.profile
+$ sudo ln -svf /usr/portage/profiles/default/linux/arm/17.0/armv7a    \
       /usr/arm-unknown-linux-gnueabi/etc/portage/make.profile
 ```
 
 ### 手动安装工具链
 ``` bash
-$ sudo emerge -a cross-arm-unknown-linux-gnueabi/binutils
-$ sudo USE="headers-only" emerge -a1 \
-      cross-arm-unknown-linux-gnueabi/linux-headers \
-      cross-arm-unknown-linux-gnueabi/glibc
-
-$ sudo USE="-cxx -nls -vtv -sanitize -openmp" emerge -a1 cross-arm-unknown-linux-gnueabi/gcc
-$ sudo emerge -aN \
-      cross-arm-unknown-linux-gnueabi/linux-headers \
-      cross-arm-unknown-linux-gnueabi/glibc
-
-$ sudo emerge -aN cross-arm-unknown-linux-gnueabi/gcc
+$ sudo emerge -auN cross-aarch64-unknown-linux-gnu/binutils \
+                   cross-arm-unknown-linux-gnueabi/binutils
+$ sudo USE="headers-only" emerge -auN1 \
+       cross-aarch64-unknown-linux-gnu/linux-headers \
+       cross-aarch64-unknown-linux-gnu/glibc         \
+       cross-arm-unknown-linux-gnueabi/linux-headers \
+       cross-arm-unknown-linux-gnueabi/glibc
+$ sudo USE="-cxx -nls -vtv -sanitize -openmp" emerge -auN1 \
+       cross-aarch64-unknown-linux-gnu/gcc                 \
+       cross-arm-unknown-linux-gnueabi/gcc
+$ sudo emerge -auN \
+       cross-aarch64-unknown-linux-gnu/linux-headers \
+       cross-aarch64-unknown-linux-gnu/glibc         \
+       cross-arm-unknown-linux-gnueabi/linux-headers \
+       cross-arm-unknown-linux-gnueabi/glibc
+$ sudo emerge -auN \
+       cross-aarch64-unknown-linux-gnu/gcc \
+       cross-arm-unknown-linux-gnueabi/gcc
 ```
 
 ### 拷贝 qemu 可执行文件，并设置 binfmt
@@ -101,9 +113,8 @@ $ sudo ln -svf lib usr/lib64
 ### 安装基本软件
 ``` bash
 $ sudo arm-unknown-linux-gnueabi-emerge -au1 --keep-going \
-       binutils gcc python:2.7 python:3.6 perl openrc     \
-       libtool iproute2 e2fsprogs busybox gperf openssh   \
-       unzip
+       binutils gcc python:2.7 python:3.6 perl  unzip     \
+       libtool iproute2 e2fsprogs busybox gperf openssh
 $ sudo arm-unknown-linux-gnueabi-emerge -au --keep-going  \
        sudo app-text/tree
 $ sudo arm-unknown-linux-gnueabi-emerge -au1 --keep-going \
