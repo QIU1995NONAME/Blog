@@ -47,8 +47,8 @@ __EOF__
 
 ### 初始化交叉环境
 ``` bash
-$ sudo crossdev --stable --init-target -t arm-unknown-linux-gnueabi
 $ sudo crossdev --stable --init-target -t aarch64-unknown-linux-gnu
+$ sudo crossdev --stable --init-target -t arm-unknown-linux-gnueabi
 $ sudo mkdir -p  /var/tmp/{aarch64-unknown-linux-gnu,arm-unknown-linux-gnueabi}
 $ sudo chmod 777 /var/tmp/{aarch64-unknown-linux-gnu,arm-unknown-linux-gnueabi}
 $ sudo chmod +t  /var/tmp/{aarch64-unknown-linux-gnu,arm-unknown-linux-gnueabi}
@@ -57,7 +57,7 @@ $ sudo vim /usr/arm-unknown-linux-gnueabi/etc/portage/make.conf
   ###### 主要修改以下内容
   ##     ACCEPT_KEYWORDS="${ARCH}"    # 删除 '～${ARCH}'
   ##     USE="${ARCH} -pam -fortran"  # 添加 '-fortran'
-  ##     GENTOO_MIRRORS="http://mirrors.163.com/gentoo/"
+  ##     GENTOO_MIRRORS="https://mirrors.163.com/gentoo/"
   ##     DISTDIR="/usr/portage/distfiles/"
   ##     PKGDIR="/usr/portage/packages/${CHOST}/"
   ##     PORTAGE_TMPDIR="/var/tmp/${CHOST}/"
@@ -93,7 +93,8 @@ $ sudo emerge -auN \
 
 ### 拷贝 qemu 可执行文件，并设置 binfmt
 ``` bash
-$ sudo cp /usr/bin/qemu-arm /usr/arm-unknown-linux-gnueabi/usr/bin/qemu-arm
+$ sudo cp /usr/bin/qemu-aarch64 /usr/aarch64-unknown-linux-gnu/usr/bin/
+$ sudo cp /usr/bin/qemu-arm     /usr/arm-unknown-linux-gnueabi/usr/bin/
 $ cat << __EOF__ | sudo tee /etc/binfmt.d/qemu-aarch64-arm-static.conf
 :qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-aarch64:
 :qemu-arm:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-arm:
@@ -112,24 +113,32 @@ $ sudo ln -svf lib usr/lib64
 
 ### 安装基本软件
 ``` bash
-$ sudo arm-unknown-linux-gnueabi-emerge -au1 --keep-going \
-       binutils gcc python:2.7 python:3.6 perl  unzip     \
-       libtool iproute2 e2fsprogs busybox gperf openssh
+$ sudo arm-unknown-linux-gnueabi-emerge -auDN --keep-going @world
+$ sudo arm-unknown-linux-gnueabi-emerge -au1  --keep-going \
+       $(egrep '^[a-z]+' /usr/portage/profiles/default/linux/packages.build)
+
 $ sudo arm-unknown-linux-gnueabi-emerge -au --keep-going  \
        sudo app-text/tree
-$ sudo arm-unknown-linux-gnueabi-emerge -au1 --keep-going \
-       $(egrep '^[a-z]+' /usr/portage/profiles/default/linux/packages.build)
-  ###### 由于 Python Native Extensions 对交叉编译的支持有问题，但是 portage 等一些必要软件必须安装成功，所以用下面的命令暂时绕过问题。
-$ sudo USE="-native-extensions -python_targets_python2_7" \
-       CFLAGS="-I/usr/arm-unknown-linux-gnueabi/usr/include/python3.6" \
-       LDFLAGS="-L/usr/arm-unknown-linux-gnueabi/usr/lib" \
-       arm-unknown-linux-gnueabi-emerge -auN1 --keep-going \
-       portage gentoolkit
 $ sudo USE="minimal -python_targets_python2_7" \
        CFLAGS="-I/usr/arm-unknown-linux-gnueabi/usr/include/python3.6" \
        LDFLAGS="-L/usr/arm-unknown-linux-gnueabi/usr/lib" \
        arm-unknown-linux-gnueabi-emerge -au --keep-going \
        vim
+$ sudo arm-unknown-linux-gnueabi-emerge -au1 --keep-going \
+       perl autoconf help2man automake libtool
+
+  ###### 由于 Python Native Extensions 对交叉编译的支持有问题，但是 portage 等一些必要软件必须安装成功，所以用下面的命令暂时绕过问题。
+$ sudo USE="-native-extensions -systemd -udev -python_targets_python2_7" \
+       CFLAGS="-I/usr/arm-unknown-linux-gnueabi/usr/include/python3.6" \
+       LDFLAGS="-L/usr/arm-unknown-linux-gnueabi/usr/lib" \
+       arm-unknown-linux-gnueabi-emerge -auN1 --keep-going \
+       portage gentoolkit
+
+  ###### 如果启用了 systemd 需要解循环依赖
+$ sudo USE="-systemd" arm-unknown-linux-gnueabi-emerge -au1  --keep-going procps
+$ sudo                arm-unknown-linux-gnueabi-emerge -au1  --keep-going systemd
+$ sudo                arm-unknown-linux-gnueabi-emerge -auN1 --keep-going procps
+
 ```
 
 ### Chroot
@@ -142,7 +151,6 @@ $ sudo USE="minimal -python_targets_python2_7" \
   ##  删除 PKG_CONFIG_PATH
   ##  删除 PORTAGE_TMPDIR
   ##  FEATURES 添加 '-pid-sandbox'
-  ##  替换 ${ARCH} 为 arm
 $ cd /usr/arm-unknown-linux-gnueabi
 $ sudo mount --rbind /proc proc
 $ sudo mount --rbind /dev  dev
@@ -153,7 +161,6 @@ $ sudo cp /etc/locale.gen /etc/resolv.conf etc/
 $ sudo chroot .
 (chroot) ldconfig
 (chroot) locale-gen
-(chroot) emerge -auN1 portage
-(chroot) emerge -auDN --keep-going @world
+(chroot) emerge -auN1 ctags portage vim util-linux
 
 ```
