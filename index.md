@@ -9,4 +9,9 @@ layout: main
 
 {% endfor %}
 
+<br>
+# Friend Links
+
++ [Cyorage's Blog](https://ohayo.cyoragex.xyz/)
+
 
